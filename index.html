@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المستودع </title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .breadcrumbs {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .breadcrumb-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            color: #4285f4;
+            display: flex;
+            align-items: center;
+        }
+
+        .breadcrumb-item:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb-divider {
+            margin: 0 5px;
+            color: #888;
+            user-select: none;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-gap: 15px;
+            width: 100%;
+        }
+
+        .gallery-item {
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            transition: transform 0.3s;
+            cursor: pointer;
+            position: relative;
+            padding-bottom: 75%;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .gallery-item img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .folder-item {
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            transition: transform 0.3s;
+            cursor: pointer;
+            position: relative;
+            padding-bottom: 75%;
+            background-color: #f8f9fa;
+        }
+
+        .folder-item:hover {
+            transform: translateY(-5px);
+            background-color: #e8f0fe;
+        }
+
+        .folder-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 60%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .folder-icon svg {
+            width: 64px;
+            height: 64px;
+            fill: #4285f4;
+        }
+
+        .folder-name {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .folder-count {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .loader {
+            text-align: center;
+            font-size: 18px;
+            color: #333;
+            margin: 20px auto;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            padding-top: 50px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+        }
+
+        .load-more {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .load-more:hover {
+            background-color: #3367d6;
+        }
+
+        .modal-loader {
+            color: white;
+            text-align: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .modal-actions {
+            position: absolute;
+            bottom: 60px; 
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .modal-btn:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>مستودع الصور</h1>
+        <div id="breadcrumbs" class="breadcrumbs">
+            <!-- سيتم إضافة  مسار الفولدر هنا -->
+        </div>
+        <div id="gallery" class="gallery">
+            <div class="loader">جاري تحميل المحتوى...</div>
+        </div>
+        <button id="loadMore" class="load-more" style="display: none;">تحميل المزيد</button>
+    </div>
+
+    <!--تكبير الصور-->
+    <div id="imageModal" class="modal">
+        <span class="close">&times;</span>
+        <div id="modalLoader" class="modal-loader">جاري تحميل الصورة...</div>
+        <img class="modal-content" id="expandedImg">
+        <div class="modal-actions">
+            <button id="openInNewTab" class="modal-btn">فتح في تبويب جديد</button>
+            <button id="downloadImage" class="modal-btn">تحميل الصورة</button>
+        </div>
+    </div>
+
+    <script>
+        const ROOT_FOLDER_ID = '1MkyQQnNonif2lUKsnocvChZkxWni_7JQ'; //  المجلد الرئيسي
+        const API_KEY = 'AIzaSyA51qIG-_2ek8IvQFfbdc4L-JdlUCKQxiQ'; // مفتاح API
+        let currentFolderId = ROOT_FOLDER_ID;
+        let currentIndex = 0;
+        const batchSize = 12; // عدد العناصر في كل مجموعة
+        let folderContents = []; // قائمة محتويات المجلد الحالي
+        let navigationHistory = [{ id: ROOT_FOLDER_ID, name: 'الرئيسية' }]; //  التنقل
+
+        // جلب محتويات المجلد 
+        async function fetchFolderContents(folderId) {
+            try {
+                // إعادة تعيين المؤشر
+                currentIndex = 0;
+                folderContents = [];
+                
+                // عرض مؤشر التحميل
+                document.getElementById('gallery').innerHTML = '<div class="loader">جاري تحميل المحتوى...</div>';
+                
+                // جلب جميع العناصر (المجلدات والصور) داخل المجلد المحدد
+                const response = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&fields=files(id,name,mimeType,webContentLink)&key=${API_KEY}`);
+                
+                if (!response.ok) {
+                    throw new Error('فشل في جلب محتويات المجلد');
+                }
+                
+                const data = await response.json();
+                
+                // فرز العناصر: المجلدات أولاً ثم الصور
+                folderContents = data.files.sort((a, b) => {
+                    const isAFolder = a.mimeType === 'application/vnd.google-apps.folder';
+                    const isBFolder = b.mimeType === 'application/vnd.google-apps.folder';
+                    
+                    if (isAFolder && !isBFolder) return -1;
+                    if (!isAFolder && isBFolder) return 1;
+                    return a.name.localeCompare(b.name);
+                });
+                
+                // تحديث مسار التنقل
+                updateBreadcrumbs();
+                
+                // تحميل المجموعة الأولى من العناصر
+                loadContentBatch();
+            } catch (error) {
+                document.getElementById('gallery').innerHTML = `
+                    <div class="error">
+                        ${error.message}. تأكد من إعدادات المشاركة وصحة معرف المجلد.
+                    </div>
+                `;
+                console.error('Error:', error);
+            }
+        }
+
+        // تحميل مجموعة من العناصر
+        function loadContentBatch() {
+            const gallery = document.getElementById('gallery');
+            
+            if (currentIndex === 0) {
+                gallery.innerHTML = '';
+            }
+            
+            const endIndex = Math.min(currentIndex + batchSize, folderContents.length);
+            
+            if (folderContents.length === 0) {
+                gallery.innerHTML = '<div class="empty-state">هذا المجلد فارغ</div>';
+                document.getElementById('loadMore').style.display = 'none';
+                return;
+            }
+            
+            for (let i = currentIndex; i < endIndex; i++) {
+                const item = folderContents[i];
+                const isFolder = item.mimeType === 'application/vnd.google-apps.folder';
+                
+                if (isFolder) {
+                    // إنشاء عنصر مجلد
+                    const folderElement = document.createElement('div');
+                    folderElement.className = 'folder-item';
+                    folderElement.dataset.id = item.id;
+                    folderElement.dataset.name = item.name;
+                    folderElement.onclick = function() {
+                        navigateToFolder(this.dataset.id, this.dataset.name);
+                    };
+                    
+                    const folderIconDiv = document.createElement('div');
+                    folderIconDiv.className = 'folder-icon';
+                    
+                    // رمز المجلد
+                    folderIconDiv.innerHTML = `
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                        </svg>
+                        <div class="folder-name">${item.name}</div>
+                    `;
+                    
+                    folderElement.appendChild(folderIconDiv);
+                    gallery.appendChild(folderElement);
+                } else if (item.mimeType.includes('image/')) {
+                    // إنشاء عنصر صورة
+                    const imageElement = document.createElement('div');
+                    imageElement.className = 'gallery-item';
+                    
+                    const thumbnailUrl = `https://drive.google.com/thumbnail?id=${item.id}&sz=w1000`;
+                    
+                    const img = document.createElement('img');
+                    img.src = thumbnailUrl;
+                    img.alt = item.name || 'صورة';
+                    img.dataset.id = item.id;
+                    
+                    img.onclick = function() {
+                        openModal(this.dataset.id);
+                    };
+                    
+                    imageElement.appendChild(img);
+                    gallery.appendChild(imageElement);
+                }
+            }
+            
+            currentIndex = endIndex;
+            document.getElementById('loadMore').style.display =
+                currentIndex < folderContents.length ? 'block' : 'none';
+        }
+
+        // التنقل إلى مجلد
+        function navigateToFolder(folderId, folderName) {
+            // تحديث المجلد الحالي
+            currentFolderId = folderId;
+            
+            // إضافة المجلد إلى تاريخ التنقل
+            const existingIndex = navigationHistory.findIndex(item => item.id === folderId);
+            if (existingIndex !== -1) {
+                // إذا كان المجلد موجودًا في التاريخ، قم بحذف كل ما بعده
+                navigationHistory = navigationHistory.slice(0, existingIndex + 1);
+            } else {
+                // إضافة المجلد الجديد إلى التاريخ
+                navigationHistory.push({ id: folderId, name: folderName });
+            }
+            
+            // تحميل محتويات المجلد الجديد
+            fetchFolderContents(folderId);
+        }
+
+        // تحديث مسار التنقل
+        function updateBreadcrumbs() {
+            const breadcrumbsContainer = document.getElementById('breadcrumbs');
+            breadcrumbsContainer.innerHTML = '';
+            
+            navigationHistory.forEach((item, index) => {
+                const breadcrumbItem = document.createElement('div');
+                breadcrumbItem.className = 'breadcrumb-item';
+                breadcrumbItem.textContent = item.name;
+                breadcrumbItem.dataset.id = item.id;
+                breadcrumbItem.onclick = function() {
+                    // عند النقر على عنصر، انتقل إلى هذا المجلد
+                    navigateToFolder(item.id, item.name);
+                };
+                
+                breadcrumbsContainer.appendChild(breadcrumbItem);
+                
+                // إضافة فاصل إلا إذا كان العنصر الأخير
+                if (index < navigationHistory.length - 1) {
+                    const divider = document.createElement('div');
+                    divider.className = 'breadcrumb-divider';
+                    divider.textContent = '>';
+                    breadcrumbsContainer.appendChild(divider);
+                }
+            });
+        }
+
+        // دالة لفتح العرض المكبر للصورة
+        function openModal(imageId) {
+            const modal = document.getElementById('imageModal');
+            const expandedImg = document.getElementById('expandedImg');
+            const modalLoader = document.getElementById('modalLoader');
+            
+            // عرض اللودر
+            modalLoader.style.display = 'block';
+            
+            // استخدام الصورة المصغرة أولاً بحجم أكبر
+            const largerThumbnailUrl = `https://drive.google.com/thumbnail?id=${imageId}&sz=w2000`;
+            
+            // تحديث أزرار العمليات
+            document.getElementById('openInNewTab').onclick = function() {
+                window.open(`https://drive.google.com/file/d/${imageId}/view`, '_blank');
+            };
+            
+            document.getElementById('downloadImage').onclick = function() {
+                window.open(`https://drive.google.com/uc?export=download&id=${imageId}`, '_blank');
+            };
+            
+            // تحميل الصورة
+            expandedImg.src = largerThumbnailUrl;
+            expandedImg.onload = function() {
+                modalLoader.style.display = 'none'; // إخفاء اللودر عند انتهاء التحميل
+            };
+            
+            modal.style.display = 'block';
+        }
+
+        // إغلاق العرض المكبر
+        document.querySelector('.close').onclick = function () {
+            document.getElementById('imageModal').style.display = 'none';
+        };
+
+        // إغلاق العرض المكبر عند النقر خارج الصورة
+        window.onclick = function (event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+        // تحميل المحتويات عند تحميل الصفحة
+        window.onload = function () {
+            fetchFolderContents(ROOT_FOLDER_ID); // جلب محتويات المجلد الرئيسي تلقائيًا
+            document.getElementById('loadMore').onclick = loadContentBatch; // تحميل المزيد
+        };
+    </script>
+</body>
+
+</html>
